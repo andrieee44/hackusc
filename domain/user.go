@@ -1,26 +1,25 @@
 package domain
 
-import (
-	"errors"
-	"net/mail"
-)
-
 type User struct {
 	Name         string
 	Email        string
 	PasswordHash []byte
+	Roles        []string
 	ID           int64
 }
 
-func NewUser(opts ...UserOpt) (User, error) {
+func NewUser(name string, email string, passwordHash []byte) (User, error) {
 	var (
 		u   User
 		err error
 	)
 
-	ApplyUserOpts(&u, opts...)
-
-	err = u.Validate()
+	err = u.ApplyUserOpts(
+		WithName(name),
+		WithEmail(email),
+		WithPasswordHash(passwordHash),
+		WithRoles([]string{}),
+	)
 	if err != nil {
 		return User{}, err
 	}
@@ -28,33 +27,17 @@ func NewUser(opts ...UserOpt) (User, error) {
 	return u, nil
 }
 
-func (u *User) Update(opts ...UserOpt) error {
-	ApplyUserOpts(u, opts...)
-
-	return u.Validate()
-}
-
-func (u *User) Validate() error {
+func (u *User) ApplyUserOpts(opts ...UserOpt) error {
 	var (
-		addr *mail.Address
-		err  error
+		opt UserOpt
+		err error
 	)
 
-	if u.Name == "" {
-		return errors.New("name must not be empty")
-	}
-
-	addr, err = mail.ParseAddress(u.Email)
-	if err != nil {
-		return err
-	}
-
-	if addr.Address != u.Email {
-		return errors.New("email must be a valid address")
-	}
-
-	if len(u.PasswordHash) == 0 {
-		return errors.New("hash must not be empty")
+	for _, opt = range opts {
+		err = opt(u)
+		if err != nil {
+			return err
+		}
 	}
 
 	return nil
