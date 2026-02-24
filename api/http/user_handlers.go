@@ -13,13 +13,13 @@ import (
 	"github.com/andrieee44/hackusc/service"
 )
 
-type UserTokenSigner[T any] interface {
-	Sign(T, time.Duration) (string, error)
-	Extract(string) (T, error)
+type UserTokenSigner interface {
+	Sign(service.UserActor, time.Duration) (string, error)
+	Extract(string) (service.UserActor, error)
 }
 
 type UserHTTPHandler struct {
-	userTokenSigner UserTokenSigner[service.UserActor]
+	userTokenSigner UserTokenSigner
 	userService     *service.UserService
 }
 
@@ -28,7 +28,7 @@ const userTokenTTL = 24 * time.Hour
 var ErrExpiredUserToken = errors.New("user token is expired")
 
 func NewUserHTTPHandler(
-	userTokenSigner UserTokenSigner[service.UserActor],
+	userTokenSigner UserTokenSigner,
 	userService *service.UserService,
 ) *UserHTTPHandler {
 	return &UserHTTPHandler{userTokenSigner, userService}
