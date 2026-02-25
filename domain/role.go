@@ -6,3 +6,12 @@ type Role struct {
 	Permissions uint64
 	ID          uint64
 }
+
+func (r Role) DeepCopy() Role {
+	return Role{
+		r.Name,
+		r.Description,
+		r.Permissions,
+		r.ID,
+	}
+}

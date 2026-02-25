@@ -10,3 +10,14 @@ type Attachment struct {
 	CreatorID uint64
 	ID        uint64
 }
+
+func (a Attachment) DeepCopy() Attachment {
+	return Attachment{
+		a.CreatedAt,
+		a.Filename,
+		a.MIMEType,
+		a.URL,
+		a.CreatorID,
+		a.ID,
+	}
+}
