@@ -1,11 +1,13 @@
 package domain
 
+import "github.com/google/uuid"
+
 type Label struct {
 	Name        string
 	Description string
 	Color       string
-	CreatorID   uint64
-	ID          uint64
+	CreatorID   uuid.UUID
+	ID          uuid.UUID
 }
 
 func (l Label) DeepCopy() Label {

@@ -1,14 +1,18 @@
 package domain
 
-import "time"
+import (
+	"time"
+
+	"github.com/google/uuid"
+)
 
 type Attachment struct {
 	CreatedAt time.Time
 	Filename  string
 	MIMEType  string
 	URL       string
-	CreatorID uint64
-	ID        uint64
+	CreatorID uuid.UUID
+	ID        uuid.UUID
 }
 
 func (a Attachment) DeepCopy() Attachment {

@@ -1,9 +1,11 @@
 package domain
 
+import "github.com/google/uuid"
+
 type CommunityType struct {
 	Name        string
 	Description string
-	ID          uint64
+	ID          uuid.UUID
 }
 
 type Community struct {
@@ -11,8 +13,8 @@ type Community struct {
 	Name        string
 	Description string
 	Location    GeoPoint
-	TypeID      uint64
-	ID          uint64
+	TypeID      uuid.UUID
+	ID          uuid.UUID
 }
 
 func (ct CommunityType) DeepCopy() CommunityType {

@@ -4,6 +4,8 @@ import (
 	"maps"
 	"slices"
 	"time"
+
+	"github.com/google/uuid"
 )
 
 type User struct {
@@ -11,10 +13,10 @@ type User struct {
 	Name         string
 	Email        string
 	PasswordHash []byte
-	RoleIDs      map[uint64]struct{}
-	CommunityIDs map[uint64]struct{}
-	AvatarID     uint64
-	ID           uint64
+	RoleIDs      map[uuid.UUID]struct{}
+	CommunityIDs map[uuid.UUID]struct{}
+	AvatarID     uuid.UUID
+	ID           uuid.UUID
 }
 
 func (u User) DeepCopy() User {

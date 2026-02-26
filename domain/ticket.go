@@ -4,6 +4,8 @@ import (
 	"maps"
 	"slices"
 	"time"
+
+	"github.com/google/uuid"
 )
 
 type Ticket struct {
@@ -11,14 +13,14 @@ type Ticket struct {
 	UpdatedAt     time.Time
 	Title         string
 	Body          string
-	CommentIDs    []uint64
-	LabelIDs      map[uint64]struct{}
-	AttachmentIDs map[uint64]struct{}
-	AssigneeIDs   map[uint64]struct{}
-	CommunityIDs  map[uint64]struct{}
-	CreatorID     uint64
-	StateID       uint64
-	ID            uint64
+	CommentIDs    []uuid.UUID
+	LabelIDs      map[uuid.UUID]struct{}
+	AttachmentIDs map[uuid.UUID]struct{}
+	AssigneeIDs   map[uuid.UUID]struct{}
+	CommunityIDs  map[uuid.UUID]struct{}
+	CreatorID     uuid.UUID
+	StateID       uuid.UUID
+	ID            uuid.UUID
 }
 
 func (t Ticket) DeepCopy() Ticket {

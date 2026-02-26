@@ -1,10 +1,12 @@
 package domain
 
+import "github.com/google/uuid"
+
 type Role struct {
 	Name        string
 	Description string
 	Permissions uint64
-	ID          uint64
+	ID          uuid.UUID
 }
 
 func (r Role) DeepCopy() Role {
