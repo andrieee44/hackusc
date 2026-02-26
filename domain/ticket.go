@@ -9,11 +9,13 @@ import (
 )
 
 type Ticket struct {
+	Address       Address
 	CreatedAt     time.Time
 	UpdatedAt     time.Time
 	Title         string
 	Body          string
 	CommentIDs    []uuid.UUID
+	Location      GeoPoint
 	LabelIDs      map[uuid.UUID]struct{}
 	AttachmentIDs map[uuid.UUID]struct{}
 	AssigneeIDs   map[uuid.UUID]struct{}
@@ -25,11 +27,13 @@ type Ticket struct {
 
 func (t Ticket) DeepCopy() Ticket {
 	return Ticket{
+		t.Address.DeepCopy(),
 		t.CreatedAt,
 		t.UpdatedAt,
 		t.Title,
 		t.Body,
 		slices.Clone(t.CommentIDs),
+		t.Location.DeepCopy(),
 		maps.Clone(t.LabelIDs),
 		maps.Clone(t.AttachmentIDs),
 		maps.Clone(t.AssigneeIDs),
