@@ -5,7 +5,7 @@ CREATE TABLE files (
 	mime_type   VARCHAR(255)    NOT NULL,
 	file_size   BIGINT UNSIGNED NOT NULL,
 
-	CONSTRAINT pk_files_id PRIMARY KEY (id),
+	CONSTRAINT PRIMARY KEY (id),
 	CONSTRAINT uq_files_checksum UNIQUE (checksum)
 ) ENGINE=InnoDB
   DEFAULT CHARSET=utf8mb4
@@ -19,9 +19,9 @@ CREATE TABLE addresses (
 	province    VARCHAR(255),
 	postal_code VARCHAR(20),
 	country     CHAR(2),
-	location    POINT SRID 4326,
+	location    POINT,
 
-	CONSTRAINT pk_addresses_id PRIMARY KEY (id)
+	CONSTRAINT PRIMARY KEY (id),
 
 	CONSTRAINT chk_addresses_location CHECK (
     	location IS NULL OR (
@@ -38,8 +38,43 @@ CREATE TABLE timestamps (
 	created_at DATETIME(6) NOT NULL,
 	updated_at DATETIME(6) NOT NULL,
 
-	CONSTRAINT pk_timestamps_id PRIMARY KEY (id),
+	CONSTRAINT PRIMARY KEY (id),
 	CONSTRAINT chk_timestamps_updated_at CHECK (updated_at >= created_at)
+) ENGINE=InnoDB
+  DEFAULT CHARSET=utf8mb4
+  COLLATE=utf8mb4_unicode_ci;
+
+CREATE TABLE moderation_states (
+	id          BINARY(16)   NOT NULL,
+	name        VARCHAR(255) NOT NULL,
+	description TEXT         NOT NULL,
+
+	CONSTRAINT PRIMARY KEY (id),
+	CONSTRAINT uq_moderation_states_name UNIQUE (name)
+) ENGINE=InnoDB
+  DEFAULT CHARSET=utf8mb4
+  COLLATE=utf8mb4_unicode_ci;
+
+CREATE TABLE users (
+	id            BINARY(16)     NOT NULL,
+	timestamp_id  BINARY(16)     NOT NULL,
+	address_id    BINARY(16)     NOT NULL,
+	email         VARCHAR(320)   NOT NULL,
+	first_name    VARCHAR(255)   NOT NULL,
+	last_name     VARCHAR(255)   NOT NULL,
+	password_hash VARBINARY(255) NOT NULL,
+	middle_name   VARCHAR(255),
+
+	CONSTRAINT PRIMARY KEY (id),
+	CONSTRAINT uq_users_email UNIQUE (email),
+
+	CONSTRAINT fk_users_timestamp_id
+		FOREIGN KEY (timestamp_id)
+		REFERENCES timestamps(id),
+
+	CONSTRAINT fk_users_address_id
+		FOREIGN KEY (address_id)
+		REFERENCES addresses(id)
 ) ENGINE=InnoDB
   DEFAULT CHARSET=utf8mb4
   COLLATE=utf8mb4_unicode_ci;
@@ -49,7 +84,7 @@ CREATE TABLE authorships (
 	creator_id  BINARY(16),
 	modifier_id BINARY(16),
 
-	CONSTRAINT pk_authorships_id PRIMARY KEY (id),
+	CONSTRAINT PRIMARY KEY (id),
 
 	CONSTRAINT fk_authorships_creator_id
 		FOREIGN KEY (creator_id)
@@ -64,24 +99,13 @@ CREATE TABLE authorships (
   DEFAULT CHARSET=utf8mb4
   COLLATE=utf8mb4_unicode_ci;
 
-CREATE TABLE moderation_states (
-	id          BINARY(16)   NOT NULL,
-	name        VARCHAR(255) NOT NULL,
-	description TEXT         NOT NULL,
-
-	CONSTRAINT pk_moderation_states_id PRIMARY KEY (id),
-	CONSTRAINT uq_moderation_states_name UNIQUE (name)
-) ENGINE=InnoDB
-  DEFAULT CHARSET=utf8mb4
-  COLLATE=utf8mb4_unicode_ci;
-
 CREATE TABLE moderations (
 	id           BINARY(16)  NOT NULL,
 	state_id     BINARY(16)  NOT NULL,
 	timestamp_id BINARY(16)  NOT NULL,
 	moderator_id BINARY(16),
 
-	CONSTRAINT pk_moderations_id PRIMARY KEY (id),
+	CONSTRAINT PRIMARY KEY (id),
 
 	CONSTRAINT fk_moderations_state_id
 		FOREIGN KEY (state_id)
@@ -99,34 +123,11 @@ CREATE TABLE moderations (
   DEFAULT CHARSET=utf8mb4
   COLLATE=utf8mb4_unicode_ci;
 
-CREATE TABLE users (
-	id            BINARY(16)     NOT NULL,
-	moderation_id BINARY(16)     NOT NULL,
-	timestamp_id  BINARY(16)     NOT NULL,
-	address_id    BINARY(16)     NOT NULL,
-	email         VARCHAR(320)   NOT NULL,
-	first_name    VARCHAR(255)   NOT NULL,
-	last_name     VARCHAR(255)   NOT NULL,
-	password_hash VARBINARY(255) NOT NULL,
-	middle_name   VARCHAR(255),
-
-	CONSTRAINT pk_users_id PRIMARY KEY (id),
-	CONSTRAINT uq_users_email UNIQUE (email),
-
-	CONSTRAINT fk_users_moderation_id
+ALTER TABLE users
+	ADD COLUMN moderation_id BINARY(16) NULL AFTER id,
+	ADD CONSTRAINT fk_users_moderation_id
 		FOREIGN KEY (moderation_id)
-		REFERENCES moderations(id),
-
-	CONSTRAINT fk_users_timestamp_id
-		FOREIGN KEY (timestamp_id)
-		REFERENCES timestamps(id),
-
-	CONSTRAINT fk_users_address_id
-		FOREIGN KEY (address_id)
-		REFERENCES addresses(id)
-) ENGINE=InnoDB
-  DEFAULT CHARSET=utf8mb4
-  COLLATE=utf8mb4_unicode_ci;
+		REFERENCES moderations(id);
 
 CREATE TABLE avatars (
 	user_id      BINARY(16)    NOT NULL,
@@ -135,7 +136,7 @@ CREATE TABLE avatars (
 	width        INT UNSIGNED,
 	height       INT UNSIGNED,
 
-	CONSTRAINT pk_avatars_user_id PRIMARY KEY (user_id),
+	CONSTRAINT PRIMARY KEY (user_id),
 
 	CONSTRAINT fk_avatars_user_id
 		FOREIGN KEY (user_id)
@@ -162,7 +163,7 @@ CREATE TABLE comments (
 	content       TEXT       NOT NULL,
 	pinned        BOOLEAN    NOT NULL,
 
-	CONSTRAINT pk_comments_id PRIMARY KEY (id),
+	CONSTRAINT PRIMARY KEY (id),
 
 	CONSTRAINT fk_comments_moderation_id
 		FOREIGN KEY (moderation_id)
@@ -189,7 +190,7 @@ CREATE TABLE community_types (
 	name        VARCHAR(255) NOT NULL,
 	description TEXT         NOT NULL,
 
-	CONSTRAINT pk_community_types_id PRIMARY KEY (id),
+	CONSTRAINT PRIMARY KEY (id),
 	CONSTRAINT uq_community_types_name UNIQUE (name)
 ) ENGINE=InnoDB
   DEFAULT CHARSET=utf8mb4
@@ -206,7 +207,7 @@ CREATE TABLE communities (
 	name          VARCHAR(255) NOT NULL,
 	description   TEXT,
 
-	CONSTRAINT pk_communities_id PRIMARY KEY (id),
+	CONSTRAINT PRIMARY KEY (id),
 	CONSTRAINT uq_communities_type_id_name UNIQUE (type_id, name),
 
 	CONSTRAINT fk_communities_type_id
@@ -242,8 +243,7 @@ CREATE TABLE users_communities (
 	community_id BINARY(16)   NOT NULL,
 	created_by   TIMESTAMP(6) NOT NULL,
 
-	CONSTRAINT pk_users_communities_user_id_community_id
-		PRIMARY KEY (user_id, community_id),
+	CONSTRAINT PRIMARY KEY (user_id, community_id),
 
 	CONSTRAINT fk_users_communities_user_id
 		FOREIGN KEY (user_id)
@@ -262,7 +262,7 @@ CREATE TABLE ticket_states (
 	id   BINARY(16)   NOT NULL,
 	name VARCHAR(255) NOT NULL,
 
-	CONSTRAINT pk_ticket_states_id PRIMARY KEY (id),
+	CONSTRAINT PRIMARY KEY (id),
 	CONSTRAINT uq_ticket_states_name UNIQUE (name)
 ) ENGINE=InnoDB
   DEFAULT CHARSET=utf8mb4
@@ -279,7 +279,7 @@ CREATE TABLE tickets (
 	title         VARCHAR(255) NOT NULL,
 	description   TEXT,
 
-	CONSTRAINT pk_tickets_id PRIMARY KEY (id),
+	CONSTRAINT PRIMARY KEY (id),
 
 	CONSTRAINT fk_tickets_community_id
 		FOREIGN KEY (community_id)
@@ -317,7 +317,7 @@ CREATE TABLE tickets_states_history (
 	creator_id BINARY(16),
 	created_at DATETIME(6) NOT NULL,
 
-	CONSTRAINT pk_tickets_states_history_id PRIMARY KEY (id),
+	CONSTRAINT PRIMARY KEY (id),
 
 	CONSTRAINT fk_tickets_states_history_state_id
 		FOREIGN KEY (state_id)
@@ -325,7 +325,7 @@ CREATE TABLE tickets_states_history (
 
 	CONSTRAINT fk_tickets_states_history_ticket_id
 		FOREIGN KEY (ticket_id)
-		REFERENCES tickets(id),
+		REFERENCES tickets(id)
 		ON DELETE CASCADE,
 
 	CONSTRAINT fk_tickets_states_history_creator_id
@@ -340,8 +340,7 @@ CREATE TABLE tickets_assignees (
 	ticket_id BINARY(16) NOT NULL,
 	user_id   BINARY(16) NOT NULL,
 
-	CONSTRAINT pk_tickets_assignees_ticket_id_user_id
-		PRIMARY KEY (ticket_id, user_id),
+	CONSTRAINT PRIMARY KEY (ticket_id, user_id),
 
 	CONSTRAINT fk_tickets_assignees_ticket_id
 		FOREIGN KEY (ticket_id)
@@ -364,11 +363,11 @@ CREATE TABLE tickets_assignment_history (
 	created_at  DATETIME(6) NOT NULL,
 	added       BOOLEAN     NOT NULL,
 
-	CONSTRAINT pk_tickets_assignment_history_id PRIMARY KEY (id),
+	CONSTRAINT PRIMARY KEY (id),
 
 	CONSTRAINT fk_tickets_assignment_history_ticket_id
 		FOREIGN KEY (ticket_id)
-		REFERENCES tickets(id),
+		REFERENCES tickets(id)
 		ON DELETE CASCADE,
 
 	CONSTRAINT fk_tickets_assignment_history_creator_id
@@ -390,7 +389,7 @@ CREATE TABLE global_roles (
 	permissions BIGINT UNSIGNED NOT NULL,
 	description TEXT            NOT NULL,
 
-	CONSTRAINT pk_global_roles_id PRIMARY KEY (id),
+	CONSTRAINT PRIMARY KEY (id),
 	CONSTRAINT uq_global_roles_name UNIQUE (name)
 ) ENGINE=InnoDB
   DEFAULT CHARSET=utf8mb4
@@ -401,8 +400,7 @@ CREATE TABLE users_global_roles (
 	role_id    BINARY(16)  NOT NULL,
 	created_at DATETIME(6) NOT NULL,
 
-	CONSTRAINT pk_users_global_roles_user_id_role_id
-		PRIMARY KEY (user_id, role_id),
+	CONSTRAINT PRIMARY KEY (user_id, role_id),
 
 	CONSTRAINT fk_users_global_roles_user_id
 		FOREIGN KEY (user_id)
@@ -426,7 +424,7 @@ CREATE TABLE communities_roles (
 	permissions   BIGINT UNSIGNED NOT NULL,
 	description   TEXT,
 
-	CONSTRAINT pk_communities_roles_id PRIMARY KEY (id),
+	CONSTRAINT PRIMARY KEY (id),
 
 	CONSTRAINT uq_communities_roles_community_id_name
 		UNIQUE (community_id, name),
@@ -452,8 +450,7 @@ CREATE TABLE users_communities_roles (
 	role_id    BINARY(16)  NOT NULL,
 	created_at DATETIME(6) NOT NULL,
 
-	CONSTRAINT pk_users_communities_roles_user_id_role_id
-		PRIMARY KEY (user_id, role_id),
+	CONSTRAINT PRIMARY KEY (user_id, role_id),
 
 	CONSTRAINT fk_users_communities_roles_user_id
 		FOREIGN KEY (user_id)
@@ -477,7 +474,7 @@ CREATE TABLE labels (
 	color         CHAR(6)      NOT NULL,
 	description   TEXT,
 
-	CONSTRAINT pk_labels_id PRIMARY KEY (id),
+	CONSTRAINT PRIMARY KEY (id),
 	CONSTRAINT uq_labels_community_id_name UNIQUE (community_id, name),
 
 	CONSTRAINT fk_labels_community_id
@@ -501,8 +498,7 @@ CREATE TABLE tickets_labels (
 	label_id   BINARY(16)  NOT NULL,
 	created_at DATETIME(6) NOT NULL,
 
-	CONSTRAINT pk_tickets_labels_ticket_id_label_id
-		PRIMARY KEY (ticket_id, label_id),
+	CONSTRAINT PRIMARY KEY (ticket_id, label_id),
 
 	CONSTRAINT fk_tickets_labels_ticket_id
 		FOREIGN KEY (ticket_id)
@@ -523,8 +519,7 @@ CREATE TABLE tickets_files (
 	name       VARCHAR(255) NOT NULL,
 	created_at DATETIME(6)  NOT NULL,
 
-	CONSTRAINT pk_tickets_files_ticket_id_file_id
-		PRIMARY KEY (ticket_id, file_id),
+	CONSTRAINT PRIMARY KEY (ticket_id, file_id),
 
 	CONSTRAINT fk_tickets_files_ticket_id
 		FOREIGN KEY (ticket_id)
@@ -543,8 +538,7 @@ CREATE TABLE tickets_comments (
 	ticket_id  BINARY(16) NOT NULL,
 	comment_id BINARY(16) NOT NULL,
 
-	CONSTRAINT pk_tickets_comments_id
-		PRIMARY KEY (id),
+	CONSTRAINT PRIMARY KEY (id),
 
 	CONSTRAINT fk_tickets_comments_ticket_id
 		FOREIGN KEY (ticket_id)
@@ -564,8 +558,7 @@ CREATE TABLE tickets_comments_files (
 	name               VARCHAR(255) NOT NULL,
 	created_at         DATETIME(6)  NOT NULL,
 
-	CONSTRAINT pk_tickets_comments_files_tickets_comment_id_file_id
-		PRIMARY KEY (tickets_comment_id, file_id),
+	CONSTRAINT PRIMARY KEY (tickets_comment_id, file_id),
 
 	CONSTRAINT fk_tickets_comments_files_ticket_tickets_comment_id
 		FOREIGN KEY (tickets_comment_id)
@@ -589,7 +582,7 @@ CREATE TABLE posts (
 	title         VARCHAR(255) NOT NULL,
 	content       TEXT         NOT NULL,
 
-	CONSTRAINT pk_posts_id PRIMARY KEY (id),
+	CONSTRAINT PRIMARY KEY (id),
 
 	CONSTRAINT fk_posts_community_id
 		FOREIGN KEY (community_id)
@@ -622,8 +615,7 @@ CREATE TABLE posts_files (
 	name       VARCHAR(255) NOT NULL,
 	created_at DATETIME(6)  NOT NULL,
 
-	CONSTRAINT pk_posts_files_post_id_file_id
-		PRIMARY KEY (post_id, file_id),
+	CONSTRAINT PRIMARY KEY (post_id, file_id),
 
 	CONSTRAINT fk_posts_files_post_id
 		FOREIGN KEY (post_id)
@@ -642,8 +634,7 @@ CREATE TABLE posts_comments (
 	post_id    BINARY(16) NOT NULL,
 	comment_id BINARY(16) NOT NULL,
 
-	CONSTRAINT pk_posts_comments_id
-		PRIMARY KEY (id),
+	CONSTRAINT PRIMARY KEY (id),
 
 	CONSTRAINT fk_posts_comments_post_id
 		FOREIGN KEY (post_id)
@@ -663,15 +654,14 @@ CREATE TABLE posts_comments_files (
 	name             VARCHAR(255) NOT NULL,
 	created_at       DATETIME(6)  NOT NULL,
 
-	CONSTRAINT pk_posts_comments_files_posts_comment_id_file_id
-		PRIMARY KEY (posts_comment_id, file_id),
+	CONSTRAINT PRIMARY KEY (posts_comment_id, file_id),
 
 	CONSTRAINT fk_posts_comments_files_post_posts_comment_id
 		FOREIGN KEY (posts_comment_id)
 		REFERENCES posts_comments(id)
 		ON DELETE CASCADE,
 
-	CONSTRAINT fk_comments_files_file_id
+	CONSTRAINT fk_posts_comments_files_file_id
 		FOREIGN KEY (file_id)
 		REFERENCES files(id)
 ) ENGINE=InnoDB
