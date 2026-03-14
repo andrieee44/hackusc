@@ -1,4 +1,6 @@
-DROP TABLE IF EXISTS
+SET FOREIGN_KEY_CHECKS = 0;
+
+DROP TABLE
 	posts_comments_files,
     posts_comments,
     posts_files,
@@ -29,3 +31,5 @@ DROP TABLE IF EXISTS
     timestamps,
     addresses,
 	files;
+
+SET FOREIGN_KEY_CHECKS = 0;

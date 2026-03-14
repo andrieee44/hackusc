@@ -1,0 +1,11 @@
+version: "2"
+sql:
+  - engine: "mysql"
+    queries: "./store/queries"
+    schema: "./store/migrations"
+    database:
+      uri: "${DB_USERNAME}:${DB_PASSWORD}@tcp(127.0.0.1:3306)/${DB_NAME}"
+    gen:
+      go:
+        package: "store"
+        out: "./store"

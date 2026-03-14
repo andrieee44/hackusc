@@ -19,15 +19,14 @@ CREATE TABLE addresses (
 	province    VARCHAR(255),
 	postal_code VARCHAR(20),
 	country     CHAR(2),
-	location    POINT,
+	latitude    DOUBLE,
+	longitude   DOUBLE,
 
 	CONSTRAINT PRIMARY KEY (id),
 
-	CONSTRAINT chk_addresses_location CHECK (
-    	location IS NULL OR (
-        	ST_X(location) BETWEEN -180 AND 180 AND
-        	ST_Y(location) BETWEEN -90 AND 90
-    	)
+	CONSTRAINT chk_addresses_latitude_longitude CHECK (
+		(latitude IS NULL AND longitude IS NULL) OR
+		(latitude BETWEEN -90 AND 90 AND longitude BETWEEN -180 AND 180)
 	)
 ) ENGINE=InnoDB
   DEFAULT CHARSET=utf8mb4
